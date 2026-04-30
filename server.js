@@ -44,6 +44,12 @@ app.post("/create-checkout", async (req, res) => {
   }
 });
 
-app.listen(10000, () => {
-  console.log("Server running");
+app.get("/", (req, res) => {
+  res.send("Playwick checkout server is running");
+});
+
+const PORT = process.env.PORT || 10000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
