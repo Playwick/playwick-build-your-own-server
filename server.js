@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -18,10 +19,23 @@ app.post("/create-checkout", async (req, res) => {
   try {
     const { scent, playlist, name } = req.body;
 
+    if (!scent || !playlist || !name) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const orderNote = `PLAYWICK CUSTOM ORDER
+
+Candle Name: ${name}
+Scent: ${scent}
+Playlist URL: ${playlist}
+
+Fulfillment Note:
+Please use the scent, candle name, and playlist URL exactly as entered above.`;
+
     const response = await client.checkoutApi.createPaymentLink({
       idempotencyKey: crypto.randomUUID(),
       quickPay: {
-        name: `Playwick - ${name}`,
+        name: `Custom Playwick: ${name}`,
         priceMoney: {
           amount: 3800,
           currency: "CAD",
@@ -32,15 +46,15 @@ app.post("/create-checkout", async (req, res) => {
         redirectUrl: "https://www.playwickcandles.com",
       },
       prePopulatedData: {
-        buyerNote: `Scent: ${scent}\nPlaylist: ${playlist}\nName: ${name}`,
+        buyerNote: orderNote,
       },
     });
 
     res.json({ url: response.result.paymentLink.url });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Error creating checkout");
+    console.error("Checkout error:", err);
+    res.status(500).json({ error: "Error creating checkout" });
   }
 });
 
